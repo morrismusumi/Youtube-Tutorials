@@ -1,0 +1,76 @@
+services:
+
+  microservices-demo-api:
+    ports:
+      - "8001:8000" 
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      placement:
+        constraints:
+          - node.labels.database != true
+    volumes:
+      - api-data:/data
+    configs:
+      - source: settings
+        target: /.env
+
+  microservices-demo-worker:
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+      mode: replicated
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      placement:
+        constraints:
+          - node.labels.database != true
+    volumes:
+      - worker-data:/data
+
+  postgres:
+    deploy:
+      placement:
+        constraints:
+          - node.labels.database == true
+
+
+volumes:
+  api-data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=172.20.0.22,rw,sync"
+      device: ":/mnt/api"
+
+  worker-data:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=172.20.0.22,rw,sync"
+      device: ":/mnt/worker"
+
+configs:
+  settings:
+    file: ./.env

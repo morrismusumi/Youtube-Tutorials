@@ -1,0 +1,46 @@
+services:
+  microservices-demo-api:
+    build:
+      context: .
+      dockerfile: deploy/api.dockerfile
+    image: 127.0.0.1:5000/microservices-demo-api
+    ports:
+      - "8001:8000"  
+    environment:
+    - DB_HOST=postgres
+    - DB_PORT=5432
+    - DB_USER=postgres
+    - DB_PASS=admin123xyz
+    restart: always
+    networks:
+      microservices-net:
+        aliases:
+          - microservices-demo-api
+
+  microservices-demo-worker:
+    build:
+      context: .
+      dockerfile: deploy/worker.dockerfile
+    image: 127.0.0.1:5000/microservices-demo-worker
+    environment:
+    - API_BASE_URL=http://microservices-demo-api:8000
+    networks:
+      microservices-net:
+        aliases:
+          - microservices-demo-worker
+    restart: always
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123xyz
+    networks:
+      microservices-net:
+        aliases:
+          - postgres
+networks:
+  microservices-net:
+    name: microservices-net
