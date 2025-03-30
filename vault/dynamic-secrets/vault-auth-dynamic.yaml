@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: microservices-demo
+  name: dynamic-secret-db
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: dynamic-auth
+  namespace: microservices-demo
+spec:
+  method: kubernetes
+  mount: kubernetes-auth
+  kubernetes:
+    role: auth-role-db
+    serviceAccount: dynamic-secret-db
+    audiences:
+      - vault
